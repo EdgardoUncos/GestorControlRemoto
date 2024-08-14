@@ -1,0 +1,198 @@
+﻿@page "/listacontrol"
+@using GestorControlRemoto.Shared.Models
+@using GestorControlRemoto.Shared.DTOs
+@inject HttpClient Http
+@inject IJSRuntime JS
+@using System.Net.Http.Headers
+
+<Navbar></Navbar>
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+
+<div class="container">
+
+    <h3>Lista de Controles</h3>
+
+    <EditForm Model="nuevoControlDTO" OnValidSubmit="CrearControl">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <InputText @bind-Value="nuevoControlDTO.CodigoControl" placeholder="Codigo"></InputText>
+        <InputText @bind-Value="nuevoControlDTO.Detalle" placeholder="Detalle"></InputText>
+        <InputText @bind-Value="nuevoControlDTO.UrlImagen" placeholder="Imagen"></InputText>
+
+        <button type="submit">Agregar</button>
+    </EditForm>
+
+    <br />
+    <br />
+
+    <Grid @ref="grid" TItem="ControlRemoto" class="table table-hover table-bordered table-striped" Data="Lista" AllowFiltering="true" Responsive="true" AllowPaging="true" PageSize="5" EmptyText="Sin registros para mostrar">
+
+
+        <GridColumn TItem="ControlRemoto" HeaderText="Codigo Control" PropertyName="CodigoControl" FilterTextboxWidth="120">
+            @context.CodigoControl
+        </GridColumn>
+        <GridColumn TItem="ControlRemoto" HeaderText="Detalle" PropertyName="Modelo" FilterTextboxWidth="120">
+            @context.Detalle
+        </GridColumn>
+        <GridColumn TItem="ControlRemoto" HeaderText="Acciones" PropertyName="Detalle" Filterable=false HeaderTextAlignment="Alignment.Center" TextAlignment="Alignment.Center">
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal" @onclick="(()=> CargarCR(context))"><i class="bi bi-pen-fill"></i></button>
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#eliminarModal" @onclick="(()=> CargarCR(context))"><i class="bi bi-trash3-fill"></i></button>
+        </GridColumn>
+    </Grid>
+
+</div>
+
+<br />
+<br />
+<Footer></Footer>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Editar Control Remoto</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <EditForm Model="editarCR">
+                    <p>Codigo Control</p>
+                    <InputText @bind-Value=editarCR.CodigoControl placeholder="Codigo del control" class="form-control"></InputText>
+                    <p>UrlImagen</p>
+                    <InputText @bind-Value=editarCR.UrlImagen placelholder="URL Imagen" class="form-control"></InputText>
+                    <p>Detalle</p>
+                    <InputText @bind-Value=editarCR.Detalle placelholder="Detalle" class="form-control"></InputText>                    
+                </EditForm>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" @onclick="(()=>Actualizar(editarCR))" data-bs-dismiss="modal">Guardar cambios</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="eliminarModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Esta seguro que desea eliminar?</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <EditForm Model="editarCR">
+                    <p>Codigo Control</p>
+                    <InputText @bind-Value=editarCR.CodigoControl placeholder="Codigo del control" class="form-control"></InputText>
+                    <p>UrlImagen</p>
+                    <InputText @bind-Value=editarCR.UrlImagen placelholder="URL Imagen" class="form-control"></InputText>
+                    <p>Detalle</p>
+                    <InputText @bind-Value=editarCR.Detalle placelholder="Detalle" class="form-control"></InputText>
+                </EditForm>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" @onclick="(()=>Eliminar(editarCR))" data-bs-dismiss="modal">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    List<ControlRemoto> Lista = new List<ControlRemoto>();
+    private ControlRemotoDTO nuevoControlDTO = new ControlRemotoDTO();
+    ControlRemoto editarCR = new ControlRemoto();
+
+    Grid<ControlRemoto> grid;
+
+    string token = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarLista();
+    }
+
+    public void CargarCR(ControlRemoto control)
+    {
+        editarCR = control;
+    }
+
+    public async Task Actualizar(ControlRemoto control)
+    {
+        if (control != null)
+        {
+            token = await JS.InvokeAsync<string>("localStorage.getItem", "Token");
+            if(token != null)
+            {
+                Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var result = await Http.PutAsJsonAsync($"api/ControlRemoto/{control.Id}", control);
+                if (result.IsSuccessStatusCode)
+                {
+                    await CargarLista();
+                    await ActualizarGrilla();
+                }
+            }
+            
+        }
+    }
+
+    public async Task Eliminar(ControlRemoto control)
+    {
+        if (control != null)
+        {
+            token = await JS.InvokeAsync<string>("localStorage.getItem", "Token");
+            Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            var result = await Http.DeleteAsync($"api/ControlRemoto/{control.Id}");
+            if (result.IsSuccessStatusCode)
+            {
+                await CargarLista();
+                await ActualizarGrilla();
+            }
+        }
+    }
+
+    private async Task CargarLista()
+    {
+        Lista = await Http.GetFromJsonAsync<List<ControlRemoto>>("api/controlremoto");
+    }
+
+    private async Task ActualizarGrilla()
+    {
+        await grid.RefreshDataAsync();
+    }
+
+
+    public async Task CrearControl()
+    {
+        var control = new ControlRemoto
+            {
+                CodigoControl = nuevoControlDTO.CodigoControl,
+                Detalle = nuevoControlDTO.Detalle,
+                UrlImagen = nuevoControlDTO.UrlImagen
+            };
+
+        token = await JS.InvokeAsync<string>("localStorage.getItem", "Token");
+        Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var resultado = await Http.PostAsJsonAsync("api/ControlRemoto", control);
+        if (resultado.IsSuccessStatusCode)
+        {
+            await CargarLista();
+            await ActualizarGrilla();
+        }
+
+        // Reset Form
+        nuevoControlDTO.CodigoControl = string.Empty;
+        nuevoControlDTO.Detalle = string.Empty;
+        nuevoControlDTO.UrlImagen = string.Empty;
+    }
+
+}
+
+

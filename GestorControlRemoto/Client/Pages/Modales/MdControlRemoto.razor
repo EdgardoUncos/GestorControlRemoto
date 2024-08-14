@@ -1,0 +1,36 @@
+﻿<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Editar Control Remoto</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <EditForm Model="editarCR">
+                    <p>Codigo Control</p>
+                    <InputText @bind-Value=editarCR.CodigoControl placeholder="Codigo del control" class="form-control"></InputText>
+                    <p>UrlImagen</p>
+                    <InputText @bind-Value=editarCR.UrlImagen placelholder="URL Imagen" class="form-control"></InputText>
+                    <p>Detalle</p>
+                    <InputText @bind-Value=editarCR.Detalle placelholder="Detalle" class="form-control"></InputText>
+                </EditForm>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" @onclick=Actualizar data-bs-dismiss="modal">Guardar cambios</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public ControlRemoto editarCR { get; set; } = new ControlRemoto();
+
+    public async Task Actualizar()
+    {
+        
+    }
+
+}

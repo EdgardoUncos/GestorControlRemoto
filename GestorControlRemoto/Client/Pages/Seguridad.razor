@@ -1,0 +1,45 @@
+﻿@page "/seguridad"
+@inject HttpClient Http
+@inject IJSRuntime JS
+@using System.Net.Http.Headers
+@inject AuthenticationStateProvider AuthStateProv
+@using Microsoft.AspNetCore.Authorization
+@* @attribute [Authorize(Roles = "Usuario,Admin")] *@
+
+<h3>Seguridad</h3>
+
+<AuthorizeView>
+    <Authorized>
+        <p>@context.User.Identity.Name</p>
+    </Authorized>
+    <NotAuthorized>
+        <p>No esta autorizado para ver esto</p>
+    </NotAuthorized>
+</AuthorizeView>
+
+<button @onclick=Peticion>Solicitar</button>
+
+@foreach (var u in listado)
+{
+    <div>@u.NombreCuenta</div>
+}
+
+@code {
+    public static List<Usuario> listado = new List<Usuario>();
+    string token = "";
+
+    async Task Peticion()
+    {
+        token = await JS.InvokeAsync<string>("localStorage.getItem", "Token");
+
+        Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var usuarios = await Http.GetFromJsonAsync<List<Usuario>>("api/usuario/Datos");
+
+        if (usuarios != null)
+        {
+            listado = usuarios;
+        }
+    }
+
+}

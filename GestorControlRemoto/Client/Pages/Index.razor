@@ -1,0 +1,320 @@
+﻿@page "/"
+@using System.Net.Http.Json
+@using GestorControlRemoto.Shared.Models
+@using GestorControlRemoto.Shared.DTOs
+@inject IJSRuntime JS
+@using Microsoft.AspNetCore.Authorization
+@inject HttpClient Http
+@using System.Net.Http.Headers
+
+<Navbar></Navbar>
+
+<br />
+<br />
+<br />
+<br />
+<br />
+
+<div class="container">
+    <EditForm Model="nuevoCompatible" OnValidSubmit="CrearCompatible">
+
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <select @bind="nuevoCompatible.IdMarca">
+            @foreach (var item in nuevoCompatible.ListaMarcas)
+            {
+                <option value="@item.Id">@item.Marca1</option>
+            }
+        </select>
+
+        <select @bind="nuevoCompatible.IdControl">
+            @foreach (var item in nuevoCompatible.ListaControles)
+            {
+                <option value="@item.Id">@item.CodigoControl</option>
+            }
+        </select>
+
+        <InputText @bind-Value=nuevoCompatible.Modelo placeholder="Modelo televisor"></InputText>
+
+        <button type="submit">Agregar</button>
+    </EditForm>
+    <br />
+    <br />
+
+    <Grid @ref="grid" TItem="CompatibleVM" 
+        class="table table-hover table-bordered table-striped" 
+        Data="ListaVM" AllowFiltering="true"  
+        AllowPaging="true" PageSize="5" EmptyText="Sin registros para mostrar"
+          HeaderRowCssClass="bg-secondary text-white border-bottom-0"
+          FiltersRowCssClass="bg-secondary text-white bg-opacity-25 border-bottom-0"
+          Responsive="true"
+          >
+        <GridColumn TItem="CompatibleVM" HeaderText="Modelo" PropertyName="Modelo" FilterTextboxWidth="150">
+            @context.Modelo
+        </GridColumn>
+        <GridColumn TItem="CompatibleVM" HeaderText="Marca" PropertyName="Marca" FilterTextboxWidth="80">
+            @context.Marca
+        </GridColumn>
+        <GridColumn TItem="CompatibleVM" HeaderText="Control Remoto" PropertyName="CodigoControl" FilterTextboxWidth="80">
+            @context.CodigoControl
+        </GridColumn>
+        <GridColumn TItem="CompatibleVM" HeaderText="Detalle" PropertyName="Detalle" Filterable=false>
+            @context.Detalle
+        </GridColumn>
+        <GridColumn TItem="CompatibleVM" HeaderText="Imagen" Filterable=false HeaderTextAlignment="Alignment.Center" TextAlignment="Alignment.Center">
+            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#exampleModalDetails" @onclick="(()=> CargarCR(context))"><i class="bi bi-zoom-in"></i></button>
+        </GridColumn>
+        <GridColumn TItem="CompatibleVM" HeaderText="Acciones" PropertyName="Detalle" Filterable=false HeaderTextAlignment="Alignment.Center" TextAlignment="Alignment.Center">
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal" @onclick="(()=> CargarCR(context))"><i class="bi bi-pen-fill"></i></button>
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal2" @onclick="(()=> CargarCR(context))"><i class="bi bi-trash3-fill"></i></button>
+        </GridColumn>
+
+    </Grid>
+
+</div>
+
+<br />
+<br />
+<Footer></Footer>
+
+
+
+<!-- Modal Actualizar -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Editar Control Remoto</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <EditForm Model="editarCR">
+                    <p>Marca</p>
+                    <InputText @bind-Value=editarCR.Marca placeholder="Marca del control" class="form-control"></InputText>
+                    <p>Modelo</p>
+                    <InputText @bind-Value=editarCR.Modelo placelholder="Modelo del televisor" class="form-control"></InputText>
+                    <p>Control Remoto</p>
+                    <InputText @bind-Value=editarCR.CodigoControl placelholder="Modelo del televisor" class="form-control"></InputText>
+                    <p>Detalle</p>
+                    <InputText @bind-Value=editarCR.Detalle placeholder="Detalle extra" class="form-control"></InputText>
+                    <p>Url Imagen</p>
+                    <InputText @bind-Value=editarCR.UrlImagen placeholder="Detalle extra" class="form-control"></InputText>
+
+                </EditForm>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" @onclick="(()=>Actualizar(editarCR))" data-bs-dismiss="modal">Guardar cambios</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Eliminar -->
+<div class="modal fade" id="exampleModal2" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Esta seguro que desea eliminar?</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <EditForm Model="editarCR">
+                    <p>Marca</p>
+                    <InputText @bind-Value=editarCR.Marca placeholder="Marca del control" class="form-control"></InputText>
+                    <p>Modelo</p>
+                    <InputText @bind-Value=editarCR.Modelo placelholder="Modelo del televisor" class="form-control"></InputText>
+                    <p>Control Remoto</p>
+                    <InputText @bind-Value=editarCR.CodigoControl placelholder="Modelo del televisor" class="form-control"></InputText>
+                    
+                </EditForm>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" @onclick="(()=>Borrar(editarCR))" data-bs-dismiss="modal">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Image -->
+<div class="modal fade" id="exampleModalDetails" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5 text-center" id="exampleModalLabel">Imagen</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @if (!string.IsNullOrEmpty(editarCR.UrlImagen))
+                {
+                    <img src="@editarCR.UrlImagen" style="max-width: 400px" />
+                }
+                else
+                {
+                    <img src="~/favicon.png" />
+                }
+                    
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+@code{
+
+    Grid<CompatibleVM> grid;    // Referencia a la grid
+
+    private CompatibleVM nuevoCompatible = new CompatibleVM();  // Sera usado en el formulario Creacion nuevo - bind
+    private CompatibleVM editarCR = new CompatibleVM();     // Toma el estado de un registro para ser modificado
+
+    List<Compatible> lista = new List<Compatible>();    // Lista de registros Tipo Compatible
+    public List<CompatibleVM> ListaVM = new List<CompatibleVM>(); // Lista de CompatibleVM, sera iterado en la grilla
+
+    private List<Marca> Marcas = new List<Marca>();
+    private List<ControlRemoto> ControlesRemotos = new List<ControlRemoto>();
+
+    string token = string.Empty;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarListas();
+
+        // Cargamos las listas de marcas y controles para los select en el form de creacion
+        nuevoCompatible.ListaMarcas = (from m in Marcas select new MarcaDTO { Id = m.Id, Marca1 = m.Marca1 }).ToList();
+        nuevoCompatible.ListaControles = (from c in ControlesRemotos select new ControlRemotoDTO { Id = c.Id, CodigoControl = c.CodigoControl }).ToList();
+
+        await CargarListaVM();
+    }
+
+    private async Task CargarListaVM()
+    {
+        ListaVM.Clear();
+
+        foreach (var item in lista)
+        {
+            item.IdMarcaNavigation = (from m in Marcas where m.Id == item.IdMarca select m).FirstOrDefault();
+            item.IdControlNavigation = (from c in ControlesRemotos where c.Id == item.IdControl select c).FirstOrDefault();
+
+            CompatibleVM aux = new CompatibleVM
+                {
+                    Id = item.Id,
+                    Modelo = item.Modelo,
+                    IdControl = item.IdControl,
+                    IdMarca = item.IdMarca,
+                    CodigoControl = item.IdControlNavigation.CodigoControl,
+                    Marca = item.IdMarcaNavigation.Marca1,
+                    UrlImagen = item.IdControlNavigation.UrlImagen
+                };
+
+            ListaVM.Add(aux);
+        }
+
+        await grid.RefreshDataAsync();
+    }
+
+
+
+    public async Task CrearCompatible()
+    {
+        var control = new Compatible
+        {
+            IdControl = nuevoCompatible.IdControl,
+            IdMarca = nuevoCompatible.IdMarca,
+            Modelo = nuevoCompatible.Modelo
+        };
+
+        token = await JS.InvokeAsync<string>("localStorage.getItem", "Token");
+
+        if(token != null)
+        {
+            Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            var resultado = await Http.PostAsJsonAsync("api/compatibles", control);
+            await CargarListas();
+            await CargarListaVM();
+        }
+
+        // Reset form
+        nuevoCompatible.IdMarca = 1;
+        nuevoCompatible.IdControl = 1;
+        nuevoCompatible.Modelo = string.Empty;
+
+    }
+
+    public void CargarCR(CompatibleVM control)
+    {
+        editarCR = new CompatibleVM
+            {
+                Id = control.Id,
+                Marca = control.Marca,
+                IdMarca = control.IdMarca,
+                Modelo = control.Modelo,
+                IdControl = control.IdControl,
+                CodigoControl = control.CodigoControl,
+                Detalle = control.Detalle,
+                UrlImagen = control.UrlImagen,
+                ListaMarcas = nuevoCompatible.ListaMarcas,
+                ListaControles = nuevoCompatible.ListaControles
+            };
+    }
+
+    public async Task Actualizar(CompatibleVM control)
+    {
+        // var result = await Http.PutAsJsonAsync($"api/controlremoto/{control.Id}", control);
+        // await ActualizarGrilla();
+        Compatible controlActualizar = new Compatible
+        {
+            Id = control.Id,
+            IdMarca = control.IdMarca,
+            IdControl = control.IdControl,
+            Modelo = control.Modelo
+        };
+
+        if (controlActualizar != null)
+        {
+            token = await JS.InvokeAsync<string>("localStorage.getItem", "Token");
+            if(token!=null)
+            {
+                Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var result = await Http.PutAsJsonAsync($"api/Compatibles/{controlActualizar.Id}", controlActualizar);
+                await CargarListas();
+                await CargarListaVM();
+            }
+
+        }
+    }
+
+    public async Task  Borrar(CompatibleVM control)
+    {
+        token = await JS.InvokeAsync<string>("localStorage.getItem", "Token");
+        if(token != null)
+        {
+            Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            var result = await Http.DeleteAsync($"api/Compatibles/{control.Id}");
+            await CargarListas();
+            await ActualizarGrilla();
+
+        }
+        
+    }
+
+    private async Task CargarListas()
+    {
+        lista = await Http.GetFromJsonAsync<List<Compatible>>("api/Compatibles");
+        Marcas = await Http.GetFromJsonAsync<List<Marca>>("api/Marcas");
+        ControlesRemotos = await Http.GetFromJsonAsync<List<ControlRemoto>>("api/ControlRemoto");
+    }
+
+    private async Task ActualizarGrilla()
+    {
+        await grid.RefreshDataAsync();
+    }
+
+}

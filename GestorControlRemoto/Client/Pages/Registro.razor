@@ -1,0 +1,57 @@
+﻿@page "/registro"
+@using GestorControlRemoto.Shared.DTOs
+@inject HttpClient Http
+@inject NavigationManager Navigator
+
+<h3>@mensaje</h3>
+
+<section class="contact d-flex justify-content-center align-items-center vh-100">
+      <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 " data-aos="fade-up" data-aos-delay="100">
+            <form class="php-email-form mt-4">
+              <div class="row">
+                <div class="col-md-12 form-group">
+                  <input type="text" name="name" class="form-control" id="name" placeholder="Nombre usuario" @bind-value=usuario.NombreUsuario required>
+                </div>
+                <div class="col-md-12 form-group mt-3 mt-md-0">
+                  <input type="text" class="form-control" name="email" id="email" placeholder="Usuario" required @bind-value=usuario.NombreCuenta>
+                </div>
+                <div class="col-md-12 form-group mt-3 mt-md-0">
+                  <input type="text" class="form-control" name="email" id="email" placeholder="Clave" required @bind-value=usuario.Password>
+                </div>
+              </div>
+              
+              <div class="my-3">
+                <div class="loading">Loading</div>
+                <div class="error-message"></div>
+                <div class="sent-message">Your message has been sent. Thank you!</div>
+              </div>
+                    <div class="text-center"><button type="button" @onclick=Registrar style="background:#009970;border:0; padding:10px 30px; transition: 0.4s; border-radius:50px; color:white;">Registrarse</button></div>
+            </form>
+          </div>
+        </div>
+
+      </div>
+</section>
+
+
+
+@code {
+    UsuarioDTO usuario = new UsuarioDTO();
+    string mensaje = "";
+
+    private async Task Registrar()
+    {
+        var resultado = await Http.PostAsJsonAsync("api/Usuario/Registrar", usuario);
+        if (resultado.IsSuccessStatusCode)
+        {
+            mensaje = await resultado.Content.ReadAsStringAsync();
+            Navigator.NavigateTo("/");
+        }
+    }
+
+    // Explicacion
+    // Creamos un objeto DTO para bindear con el formulario
+    // Creamos un Metodo Registrar, toma los datos del formulario y hace un post al web api
+}

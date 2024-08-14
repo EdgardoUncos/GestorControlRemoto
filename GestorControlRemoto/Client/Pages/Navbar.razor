@@ -1,0 +1,51 @@
+﻿@inject IJSRuntime JS
+@inject AuthenticationStateProvider AuthStateProv
+
+<!-- ======= Header ======= -->
+<header id="header" class="fixed-top d-flex align-items-center" style="background-color:white;">
+    <div class="container">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="logo">
+                <h1 class="text-light"><a href="/"><span>Control Remoto</span></a></h1>
+                <!-- Uncomment below if you prefer to use an image logo -->
+                <!-- <a href="index.html"><img src="assets/img/logo.png" alt="" class="img-fluid"></a>-->
+            </div>
+
+            <nav id="navbar" class="navbar d-flex align-items-center">
+                <ul class="d-flex align-items-center">
+                    <li><a class="nav-link scrollto active" href="/">Home</a></li>
+                    <li><a class="nav-link scrollto" href="/marcas">Marcas</a></li>
+                    <li><a class="nav-link scrollto" href="/">Modelos</a></li>
+                    <li><a class="nav-link scrollto" href="/listacontrol">Control Remoto</a></li>
+                </ul>
+            </nav><!-- .navbar -->
+            <nav class="navbar d-flex align-items-center">
+                <AuthorizeView>
+                    <Authorized>
+                        <ul class="d-flex align-items-center">
+                            <li><a class="nav-link scrollto">Hola @context.User.Identity.Name</a></li>
+                            <li><a class="nav-link scrollto" @onclick=Logout>Logout</a></li>
+                        </ul>
+                    </Authorized>
+                    <NotAuthorized>
+                        <ul class="d-flex align-items-center">
+                            <li><a class="nav-link scrollto" href="/registro">Registro</a></li>
+                            <li><a class="nav-link scrollto" href="/logueo">Login</a></li>
+                        </ul>
+                    </NotAuthorized>
+                </AuthorizeView>
+            </nav>
+            
+        </div><!-- End Header Container -->
+    </div>
+</header><!-- End Header -->
+
+@code{
+
+    async Task Logout()
+    {
+        await JS.InvokeVoidAsync("localStorage.removeItem", "Token");
+        await AuthStateProv.GetAuthenticationStateAsync();
+    }
+}
+
