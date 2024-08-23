@@ -10,6 +10,7 @@ Alta, baja y modificacion de modelos compatibles.
 Login y Registro.
 Seguridad con JWT
 Base de datos SQL Server
+Corre en servidor IIS red WIFI
 
 ### Tecnonoligia Utilizada
 
